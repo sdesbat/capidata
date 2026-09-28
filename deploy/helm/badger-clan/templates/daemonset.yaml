@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "badger-clan.fullname" . }}
+spec:
+  selector:
+    matchLabels: { app: {{ include "badger-clan.name" . }} }
+  template:
+    metadata:
+      labels: { app: {{ include "badger-clan.name" . }} }
+    spec:
+      serviceAccountName: {{ include "badger-clan.serviceAccountName" . }}
+      hostPID: true
+      hostNetwork: true
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: badger-clan
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--journal", "{{ .Values.storage.mountPath }}"]
+          securityContext:
+            privileged: {{ .Values.ebpf.privileged }}
+          env:
+            - name: BADGER_S3_BUCKET
+              value: {{ .Values.s3.bucket | quote }}
+            - name: BADGER_S3_REGION
+              value: {{ .Values.s3.region | quote }}
+            - name: BADGER_S3_PREFIX
+              value: {{ .Values.s3.prefix | quote }}
+          volumeMounts:
+            - name: journal
+              mountPath: {{ .Values.storage.mountPath }}
+            - name: bpffs
+              mountPath: /sys/fs/bpf
+            - name: debugfs
+              mountPath: /sys/kernel/debug
+              readOnly: true
+            - name: host-proc
+              mountPath: /host/proc
+              readOnly: true
+      volumes:
+        - name: journal
+          hostPath: { path: {{ .Values.storage.hostPath }}, type: DirectoryOrCreate }
+        - name: bpffs
+          hostPath: { path: /sys/fs/bpf, type: Directory }
+        - name: debugfs
+          hostPath: { path: /sys/kernel/debug, type: Directory }
+        - name: host-proc
+          hostPath: { path: /proc, type: Directory }
