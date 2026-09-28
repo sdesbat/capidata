@@ -1,0 +1,8 @@
+FROM golang:1.23-bookworm AS build
+RUN apt-get update && apt-get install -y --no-install-recommends clang llvm libbpf-dev linux-headers-amd64 && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN go install github.com/cilium/ebpf/cmd/bpf2go@v0.16.0 && go mod download && CGO_ENABLED=0 go build -trimpath -o /out/badger-clan ./cmd/badger-clan
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/badger-clan /badger-clan
+ENTRYPOINT ["/badger-clan"]

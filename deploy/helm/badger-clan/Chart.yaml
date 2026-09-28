@@ -1,0 +1,6 @@
+apiVersion: v2
+name: badger-clan
+description: Privileged eBPF PostgreSQL mutation auditor
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
