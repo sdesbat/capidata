@@ -1,0 +1,21 @@
+image:
+  repository: ghcr.io/example/badger-clan
+  tag: latest
+  pullPolicy: IfNotPresent
+serviceAccount:
+  create: true
+  name: ""
+storage:
+  hostPath: /var/lib/badger
+  mountPath: /var/lib/badger
+ebpf:
+  objectPath: /opt/badger/capture.bpf.o
+  privileged: true
+s3:
+  bucket: ""
+  region: eu-west-1
+  prefix: badger
+resources: {}
+tolerations:
+  - operator: Exists
+nodeSelector: {}
